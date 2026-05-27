@@ -8,8 +8,6 @@ moneda:        "$",
 };
 
 
-// ── ARRAY DE OBJETOS: catálogo de productos ───────────────────────
-// Cada elemento del array es un objeto con sus propias propiedades.
 let productos = [
 { id: 1,  nombre: "Café Americano",     categoria: "Bebidas",   precio: 35, stock: 50, estado: "activo",   desc: "Café negro sin leche" },
 { id: 2,  nombre: "Cappuccino",         categoria: "Bebidas",   precio: 45, stock: 40, estado: "activo",   desc: "Espresso con leche vaporizada" },
@@ -24,9 +22,6 @@ let productos = [
 ];
 
 
-// ── ARRAY DE OBJETOS: pedidos activos ────────────────────────────
-// Propiedad "items" es un array de strings dentro de cada objeto pedido.
-let pedidos = [
   { id: "P-001", mesa: "Mesa 2",  items: ["Café Americano", "Croissant"],          estado: "en-preparacion", hora: "10:15", notas: "" },
   { id: "P-002", mesa: "Mesa 5",  items: ["Latte", "Cheesecake"],                  estado: "pendiente",       hora: "10:22", notas: "Sin azúcar" },
   { id: "P-003", mesa: "Juan R.", items: ["Cappuccino"],                            estado: "listo",           hora: "10:05", notas: "" },
@@ -34,9 +29,7 @@ let pedidos = [
 ];
 
 
-// ── OBJETO: estado de la aplicación ─────────────────────────────
-// Agrupa en un solo objeto todas las variables de estado,
-// en lugar de tenerlas sueltas.
+
 const estado = {
   siguienteIdProducto: 11,
   siguienteIdPedido:   5,
@@ -45,14 +38,11 @@ const estado = {
   productoAEliminar:   null,
 };
 
-
-// ── OBJETO: etiquetas y clases para los estados de un pedido ────
-// Permite centralizar las traducciones sin repetir if/else en todo el código.
 const estadosPedido = {
-  pendiente:        { etiqueta: "Pendiente",       clase: "badge-pendiente" },
-  "en-preparacion": { etiqueta: "En preparación",  clase: "badge-prep"      },
-  listo:            { etiqueta: "Listo",            clase: "badge-listo"     },
-  cancelado:        { etiqueta: "Cancelado",        clase: "badge-cancel"    },
+pendiente:        { etiqueta: "Pendiente",       clase: "badge-pendiente" },
+"en-preparacion": { etiqueta: "En preparación",  clase: "badge-prep"      },
+listo:            { etiqueta: "Listo",            clase: "badge-listo"     },
+cancelado:        { etiqueta: "Cancelado",        clase: "badge-cancel"    },
 };
 
 
@@ -335,11 +325,6 @@ if (estado.productoAEliminar !== null) {
 }
 }
 
-
-// ════════════════════════════════════════════════════════════════
-//  NUEVO PEDIDO
-// ════════════════════════════════════════════════════════════════
-
 function renderizarSelectorItems() {
   // filter() sobre el array: solo productos activos con stock disponible.
 const disponibles = productos.filter(p => p.estado === "activo" && p.stock > 0);
@@ -405,11 +390,8 @@ if (!estado.itemsSeleccionados.length) {
     mostrarToast("Selecciona al menos un producto");
     return;
 }
-
 const ahora = new Date();
 const hora  = `${ahora.getHours()}:${String(ahora.getMinutes()).padStart(2, "0")}`;
-
-  // Creamos un objeto nuevo para el pedido y lo añadimos al inicio del array con unshift().
 const nuevoPedido = {
     id:     `P-00${estado.siguienteIdPedido++}`,
     mesa:   mesa,
@@ -426,21 +408,10 @@ limpiarNuevoPedido();
 mostrarVista("pedidos");
 }
 
-
-// ════════════════════════════════════════════════════════════════
-//  TOAST
-// ════════════════════════════════════════════════════════════════
-
 function mostrarToast(mensaje) {
 const toast = document.getElementById("toast");
 toast.textContent = mensaje;
 toast.classList.add("show");
 setTimeout(() => toast.classList.remove("show"), 2400);
 }
-
-
-// ════════════════════════════════════════════════════════════════
-//  INICIO
-// ════════════════════════════════════════════════════════════════
-
 mostrarVista("pedidos");
