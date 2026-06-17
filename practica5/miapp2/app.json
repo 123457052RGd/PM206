@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "miApp2",
-    "slug": "miApp2",
+    "name": "miapp2",
+    "slug": "miapp2",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
