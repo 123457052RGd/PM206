@@ -1,37 +1,23 @@
 /*Zona1: Importaciones de componentes y archivos*/
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, Image } from 'react-native';
-import {Saludo} from './components/Saludo';
-import {Saludo2} from './components/Saludo2';
-import { Perfil } from './components/Perfil';
+import MenuScreen from './screens/MenuScreen';
+
+
+
 
 /*Zona2: Main - */
 export default function App() {
   return (
     <View style={styles.container}>
-
-      
-
-      <Perfil style={styles.tarjetaRoja} nombre="Diego Rubio Guerrero" carrera=" ingeneria en Sistemas" materia="Programacion Movil" cuatri="9"></Perfil>
-
- 
-
-      <Perfil 
-      style={styles.tarjetaVerde}
-      nombre="Rubio" 
-      carrera=" ing en Sistemas" 
-      materia="desarrollo movil avanzado" 
-      cuatri="egresado ya casi">
-      </Perfil>
-
-      <Perfil style={styles.tarjetaRoja} nombre="tovar" carrera="Sistemas" materia="Programacion Movil" cuatri="9"></Perfil>
-
+      <MenuScreen/>
 
       <StatusBar style="auto" />
 
     </View>
   );
 }
+
 
 /*Zona3: Estilos y posicionamientos*/
 const styles = StyleSheet.create({
@@ -50,3 +36,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#6BCB77'
   },
 });
+
+
+
+
