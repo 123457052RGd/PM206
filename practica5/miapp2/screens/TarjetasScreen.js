@@ -1,7 +1,7 @@
 /*Zona1: Importaciones de componentes y archivos*/
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, } from 'react-native';
-import { Perfil } from './components/Perfil';
+import { Perfil } from '../components/Perfil';
 
 /*Zona2: Main - */
 export default function TarjetasScreen() {

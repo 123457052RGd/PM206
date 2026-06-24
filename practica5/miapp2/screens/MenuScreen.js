@@ -1,19 +1,20 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, Button } from 'react-native';
+/*Zona1: Importaciones de componentes y archivos*/
 import { StatusBar } from 'expo-status-bar';
-
+import { StyleSheet, Text, View, Button } from 'react-native';
+import React,{useState} from 'react';
 import TarjetasScreen from './TarjetasScreen';
 import SafeAreaScreen from './SafeAreaScreen';
 import PressableScreen from './PressableScreen';
 import TextInputScreen from './TextInputScreen';
-import FlatListScreen from './FlatList';
-import ImageBackgroundScreen from './ImageBackGroungScreen';
-
+import FlatList from './FlatList';
+import ImageBackGroungScreen from './ImageBackGroungScreen';
+import ActivityIndicadorScreen from './ActivityIndicadorScreen';
+import ModalScreen from './ModalScreen';
 
 export default function MenuScreen() {
     const [screen,setScreen] =  useState('menu');
 
-    switch(screen){ 
+    switch(screen){
         case 'tarjetas':
             return <TarjetasScreen/>
         case 'safeArea':
