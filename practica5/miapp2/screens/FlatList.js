@@ -153,3 +153,5 @@ barraDivisora: {
     borderRadius: 1,
 },
 });
+
+
