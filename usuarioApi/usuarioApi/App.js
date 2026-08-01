@@ -7,11 +7,10 @@ import ConsultaUsuariosScreen from './screens/ConsultaUsuariosScreen';
 
 export default function App() {
 
-  return(
+  return (
 
     <AltaUsuariosScreen></AltaUsuariosScreen>
 
   );
 
 }
-
