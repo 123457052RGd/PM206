@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { encode } from 'base-64';
 
-const API_URL = 'http://localhost:5000/v1/usuarios';
+const API_URL = 'http://192.168.100.99:5000/v1/usuarios';
 
 export default function ActualizarUsuarioScreen() {
     const router = useRouter();
@@ -27,6 +28,7 @@ export default function ActualizarUsuarioScreen() {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + encode('admin:1234'),
                 },
                 body: JSON.stringify({
                     nombre: nombre,
@@ -64,6 +66,7 @@ export default function ActualizarUsuarioScreen() {
                                 headers: {
                                     'Accept': 'application/json',
                                     'Content-Type': 'application/json',
+                                    'Authorization': 'Basic ' + encode('admin:1234'),
                                 },
                             });
 

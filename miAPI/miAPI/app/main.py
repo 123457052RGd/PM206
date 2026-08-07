@@ -1,15 +1,15 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Optional
+
+from app.data.db import Base, engine
+from app.data import usuarioDB
+from app.routers import misc, usuarios
 
 app = FastAPI(title="API usuarios")
 
-
 origins = ["*"]
 
-#  CONFIGURACIÓN DE CORS OBLIGATORIA
-# Esto permite que tanto el navegador web como el celular hagan peticiones
+# CONFIGURACIÓN DE CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -18,4 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Crea las tablas en la base de datos al arrancar
+Base.metadata.create_all(bind=engine)
+
+# Routers
+app.include_router(misc.router)
 app.include_router(usuarios.router)

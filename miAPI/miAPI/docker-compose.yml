@@ -1,12 +1,11 @@
-version: "3.9"
-
 services:
-
   api:
     build: .
     container_name: ServerAPI
     ports:
       - "5000:5000"
+    # Se cambia "main:app" por "app.main:app"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 5000 --reload
     volumes:
       - .:/app
     depends_on:
@@ -27,13 +26,11 @@ services:
       - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin -d DB_miapi"]
       interval: 5s
-      retries: 5
       timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
-

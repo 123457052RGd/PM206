@@ -1,155 +1,183 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
+  SafeAreaView,
   View,
   Text,
-  FlatList,
-  TouchableOpacity,
   StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Alert,
+  Platform,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter } from 'expo-router';
 
-const API_URL = 'http://localhost:5000/v1/usuarios';
+// Dirección IP de tu red local
+const API_URL =
+  Platform.OS === 'web'
+    ? 'http://localhost:5000'
+    : 'http://192.168.100.99:5000';
 
 export default function ConsultaUsuariosScreen() {
+  const router = useRouter();
   const [usuarios, setUsuarios] = useState([]);
   const [cargando, setCargando] = useState(true);
 
-  const router = useRouter();
-
-  const obtenerUsuarios = async () => {
+  const cargarUsuarios = async () => {
+    setCargando(true);
     try {
-      setCargando(true);
+      const respuesta = await fetch(`${API_URL}/usuarios`);
+      const datos = await respuesta.json();
 
-      const response = await fetch(API_URL);
+      console.log('RESPUESTA USUARIOS:', datos);
 
-      if (!response.ok) {
+      if (!respuesta.ok) {
         throw new Error('Error al consultar usuarios');
       }
 
-      const data = await response.json();
-
-      // Soporta tanto [] como { usuarios: [] }
-      if (Array.isArray(data)) {
-        setUsuarios(data);
-      } else if (data.usuarios) {
-        setUsuarios(data.usuarios);
+      // Validar formato de respuesta
+      if (Array.isArray(datos)) {
+        setUsuarios(datos);
+      } else if (Array.isArray(datos.usuarios)) {
+        setUsuarios(datos.usuarios);
+      } else if (Array.isArray(datos.data)) {
+        setUsuarios(datos.data);
       } else {
+        console.log('Formato desconocido:', datos);
         setUsuarios([]);
       }
-
     } catch (error) {
-      console.error('Error al cargar usuarios:', error);
-      setUsuarios([]);
+      console.log('ERROR CONSULTA:', error);
+
+      if (Platform.OS === 'web') {
+        window.alert('Error\nNo se pudieron cargar los usuarios');
+      } else {
+        Alert.alert('Error', 'No se pudieron cargar los usuarios');
+      }
     } finally {
       setCargando(false);
     }
   };
 
-  // Carga al abrir
   useEffect(() => {
-    obtenerUsuarios();
+    cargarUsuarios();
   }, []);
 
-  // Recarga automáticamente cuando regreses desde actualizar
-  useFocusEffect(
-    useCallback(() => {
-      obtenerUsuarios();
-    }, [])
-  );
+  const abrirDetalle = (usuario) => {
+    router.push({
+      pathname: '/detalle',
+      params: {
+        usuario: JSON.stringify(usuario),
+      },
+    });
+  };
 
-  const renderCard = ({ item }) => (
-    <View style={styles.card}>
-      <Text style={styles.nombre}>{item.nombre}</Text>
-
-      <View style={styles.divider} />
-
-      <Text style={styles.edad}>
-        Edad: {item.edad} años
-      </Text>
-
+  const renderUsuario = ({ item }) => {
+    return (
       <TouchableOpacity
-        style={styles.btnDetalles}
-        onPress={() =>
-          router.push({
-            pathname: '/actualizar',
-            params: {
-              usuario: JSON.stringify(item),
-            },
-          })
-        }
+        style={styles.card}
+        onPress={() => abrirDetalle(item)}
       >
-        <Text style={styles.btnDetallesText}>
-          Ver detalles →
-        </Text>
+        <Text style={styles.nombre}>{item.nombre}</Text>
+        <Text style={styles.edad}>Edad: {item.edad}</Text>
+        <Text style={styles.ver}>Ver detalles</Text>
       </TouchableOpacity>
-    </View>
-  );
+    );
+  };
+
+  if (cargando) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#2563EB" />
+        <Text style={styles.cargando}>Cargando usuarios...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      {cargando ? (
-        <ActivityIndicator
-          size="large"
-          color="#0056b3"
-          style={{ marginTop: 20 }}
-        />
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.titulo}>Lista de Usuarios</Text>
+
+      {usuarios.length === 0 ? (
+        <View style={styles.vacio}>
+          <Text style={styles.vacioTexto}>No hay usuarios registrados</Text>
+          <TouchableOpacity style={styles.boton} onPress={cargarUsuarios}>
+            <Text style={styles.botonTexto}>Recargar</Text>
+          </TouchableOpacity>
+        </View>
       ) : (
         <FlatList
           data={usuarios}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderCard}
-          contentContainerStyle={styles.listContainer}
+          keyExtractor={(item, index) => String(item.id ?? index)}
+          renderItem={renderUsuario}
+          contentContainerStyle={styles.lista}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f4f5f7',
-    paddingHorizontal: 15,
-    paddingTop: 10,
+    backgroundColor: '#F5F6FA',
   },
-  listContainer: {
-    paddingBottom: 20,
+  titulo: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#1F2937',
+    marginVertical: 15,
+  },
+  lista: {
+    padding: 10,
   },
   card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
+    backgroundColor: '#FFFFFF',
+    padding: 18,
+    marginBottom: 10,
+    borderRadius: 10,
+    elevation: 3,
   },
   nombre: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1a56db',
-    marginBottom: 8,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#f0f0f0',
-    marginVertical: 6,
+    color: '#1F2937',
   },
   edad: {
     fontSize: 14,
-    color: '#6c757d',
-    marginBottom: 10,
+    color: '#6B7280',
+    marginTop: 5,
   },
-  btnDetalles: {
-    alignSelf: 'flex-end',
-    marginTop: 4,
+  ver: {
+    fontSize: 13,
+    color: '#2563EB',
+    marginTop: 10,
+    fontWeight: 'bold',
   },
-  btnDetallesText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1a56db',
+  cargando: {
+    textAlign: 'center',
+    marginTop: 10,
+    color: '#6B7280',
+  },
+  vacio: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  vacioTexto: {
+    fontSize: 18,
+    color: '#6B7280',
+    marginBottom: 20,
+  },
+  boton: {
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 25,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  botonTexto: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
   },
 });

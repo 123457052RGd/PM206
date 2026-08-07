@@ -1,141 +1,188 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Alert } from 'react-native';
+import {
+  SafeAreaView,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  Platform,
+  ActivityIndicator,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-// Reemplazamos localhost por la IP local y definimos la URL base de FastAPI
-const API_URL = 'http://localhost:5000/v1/usuarios';
+const API_URL =
+  Platform.OS === 'web'
+    ? 'http://localhost:5000'
+    : 'http://192.168.100.99:5000';
 
-export default function DetalleUsuarioScreen() {
-    const params = useLocalSearchParams();
-    const router = useRouter();
-    const [modalVisible, setModalVisible] = useState(false);
+export default function DetalleScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
 
-    const handleEliminar = async () => {
-        // Validación preventiva para asegurar que el ID exista
-        if (!params.id || params.id === 'undefined') {
-            Alert.alert('Error', 'No se pudo obtener el ID del usuario.');
-            return;
-        }
+  // Obtener los datos pasados por parámetro
+  const usuarioData = params.usuario ? JSON.parse(params.usuario) : {};
 
-        try {
-            // Nota: Se agrega la diagonal '/' al final para evitar el error 401/307
-            const response = await fetch(`${API_URL}/${params.id}/`, {
-                method: 'DELETE',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            });
+  const [id] = useState(usuarioData.id);
+  const [nombre, setNombre] = useState(usuarioData.nombre || '');
+  const [edad, setEdad] = useState(String(usuarioData.edad || ''));
+  const [cargando, setCargando] = useState(false);
 
-            if (response.ok) {
-                setModalVisible(false);
-                Alert.alert('Éxito', 'Usuario eliminado correctamente', [
-                    {
-                        text: 'OK',
-                        onPress: () => router.replace('/(tabs)/consulta')
-                    }
-                ]);
-            } else {
-                Alert.alert('Error', `No se pudo eliminar (Código: ${response.status})`);
-            }
-        } catch (error) {
-            console.error('Error al eliminar:', error);
-            Alert.alert('Error', 'Error de conexión al intentar conectar con la API');
-        }
-    };
+  // Petición para actualizar usuario
+  const handleActualizar = async () => {
+    if (!nombre || !edad) {
+      Alert.alert('Campos requeridos', 'Por favor llena todos los campos.');
+      return;
+    }
 
-    return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Detalles del Usuario</Text>
+    setCargando(true);
+    try {
+      const respuesta = await fetch(`${API_URL}/usuarios/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ nombre, edad: Number(edad) }),
+      });
 
-            <View style={styles.card}>
-                <Text style={styles.label}>ID</Text>
-                <Text style={styles.value}>{params.id || 'N/A'}</Text>
+      if (!respuesta.ok) {
+        throw new Error('Error al actualizar');
+      }
 
-                <Text style={styles.label}>Nombre</Text>
-                <Text style={styles.value}>{params.nombre || 'Sin nombre'}</Text>
+      Alert.alert('Éxito', 'Usuario actualizado correctamente', [
+        { text: 'OK', onPress: () => router.back() },
+      ]);
+    } catch (error) {
+      console.log('Error al actualizar:', error);
+      if (Platform.OS === 'web') {
+        window.alert('Error de conexión al intentar actualizar');
+      } else {
+        Alert.alert('Error', 'Error de conexión con el servidor');
+      }
+    } finally {
+      setCargando(false);
+    }
+  };
 
-                <Text style={styles.label}>Edad</Text>
-                <Text style={styles.value}>{params.edad ? `${params.edad} años` : 'N/A'}</Text>
+  // Petición para eliminar usuario
+  const handleEliminar = async () => {
+    setCargando(true);
+    try {
+      const respuesta = await fetch(`${API_URL}/usuarios/${id}`, {
+        method: 'DELETE',
+      });
 
-                {/* BOTÓN PARA REDIRECCIONAR AL FORMULARIO CON DATOS PRECARGADOS */}
-                <TouchableOpacity
-                    style={styles.btnActualizar}
-                    onPress={() => {
-                        router.push({
-                            pathname: '/actualizar',
-                            params: {
-                                id: params.id,
-                                nombre: params.nombre,
-                                edad: params.edad
-                            }
-                        });
-                    }}
-                >
-                    <Text style={styles.btnTextBlack}>Actualizar</Text>
-                </TouchableOpacity>
+      if (!respuesta.ok) {
+        throw new Error('Error al eliminar');
+      }
 
-                {/* BOTÓN PARA ABRIR MODAL DE ELIMINACIÓN */}
-                <TouchableOpacity
-                    style={styles.btnEliminar}
-                    onPress={() => setModalVisible(true)}
-                >
-                    <Text style={styles.btnTextWhite}>Eliminar</Text>
-                </TouchableOpacity>
-            </View>
+      Alert.alert('Éxito', 'Usuario eliminado correctamente', [
+        { text: 'OK', onPress: () => router.back() },
+      ]);
+    } catch (error) {
+      console.log('Error al eliminar:', error);
+      if (Platform.OS === 'web') {
+        window.alert('Error de conexión al intentar eliminar');
+      } else {
+        Alert.alert('Error', 'Error de conexión al intentar eliminar');
+      }
+    } finally {
+      setCargando(false);
+    }
+  };
 
-            {/* MODAL DE CONFIRMACIÓN */}
-            <Modal
-                animationType="fade"
-                transparent={true}
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalCard}>
-                        <Text style={styles.modalTitle}>Confirmar eliminación</Text>
-                        <Text style={styles.modalText}>
-                            ¿Deseas eliminar a{' '}
-                            <Text style={{ fontWeight: 'bold' }}>{params.nombre}</Text>?
-                        </Text>
+  return (
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.titulo}>Detalles del Usuario</Text>
 
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={styles.btnCancelar}
-                                onPress={() => setModalVisible(false)}
-                            >
-                                <Text style={styles.btnTextBlack}>Cancelar</Text>
-                            </TouchableOpacity>
+      <View style={styles.formGroup}>
+        <Text style={styles.label}>Nombre</Text>
+        <TextInput
+          style={styles.input}
+          value={nombre}
+          onChangeText={setNombre}
+          placeholder="Nombre del usuario"
+        />
+      </View>
 
-                            <TouchableOpacity
-                                style={styles.btnConfirmarEliminar}
-                                onPress={handleEliminar}
-                            >
-                                <Text style={styles.btnTextWhite}>Sí, eliminar</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
+      <View style={styles.formGroup}>
+        <Text style={styles.label}>Edad</Text>
+        <TextInput
+          style={styles.input}
+          value={edad}
+          onChangeText={setEdad}
+          keyboardType="numeric"
+          placeholder="Edad del usuario"
+        />
+      </View>
+
+      {cargando ? (
+        <ActivityIndicator size="large" color="#2563EB" style={{ marginTop: 20 }} />
+      ) : (
+        <View style={styles.botonera}>
+          <TouchableOpacity style={styles.btnEditar} onPress={handleActualizar}>
+            <Text style={styles.btnTexto}>Actualizar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.btnEliminar} onPress={handleEliminar}>
+            <Text style={styles.btnTexto}>Eliminar</Text>
+          </TouchableOpacity>
         </View>
-    );
+      )}
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f8f9fa', padding: 20 },
-    title: { fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginVertical: 15 },
-    card: { backgroundColor: '#fff', padding: 20, borderRadius: 12, elevation: 3 },
-    label: { fontSize: 12, color: '#6c757d', marginTop: 10 },
-    value: { fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: '#1a1a1a' },
-    btnActualizar: { backgroundColor: '#FFC107', padding: 12, borderRadius: 8, marginTop: 20, alignItems: 'center' },
-    btnEliminar: { backgroundColor: '#DC3545', padding: 12, borderRadius: 8, marginTop: 10, alignItems: 'center' },
-    btnTextBlack: { color: '#000', fontWeight: 'bold' },
-    btnTextWhite: { color: '#fff', fontWeight: 'bold' },
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-    modalCard: { width: '85%', backgroundColor: '#fff', padding: 20, borderRadius: 12, alignItems: 'center' },
-    modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#DC3545', marginBottom: 10 },
-    modalText: { textAlign: 'center', color: '#495057', marginBottom: 20 },
-    modalButtons: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
-    btnCancelar: { backgroundColor: '#E9ECEF', padding: 10, borderRadius: 8, flex: 1, marginRight: 5, alignItems: 'center' },
-    btnConfirmarEliminar: { backgroundColor: '#DC3545', padding: 10, borderRadius: 8, flex: 1, marginLeft: 5, alignItems: 'center' }
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#FFFFFF',
+  },
+  titulo: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginVertical: 20,
+    color: '#1F2937',
+  },
+  formGroup: {
+    marginBottom: 15,
+  },
+  label: {
+    fontSize: 16,
+    color: '#374151',
+    marginBottom: 5,
+    fontWeight: '600',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: '#F9FAFB',
+  },
+  botonera: {
+    marginTop: 20,
+    gap: 10,
+  },
+  btnEditar: {
+    backgroundColor: '#EAB308',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  btnEliminar: {
+    backgroundColor: '#EF4444',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  btnTexto: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 });
